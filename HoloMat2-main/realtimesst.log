@@ -1,0 +1,139 @@
+2026-04-10 02:27:49.544 - RealTimeSTT: realtimestt - INFO - Starting RealTimeSTT
+2026-04-10 02:27:49.568 - RealTimeSTT: realtimestt - INFO - Initializing audio recording (creating pyAudio input stream, sample rate: 16000 buffer size: 512
+2026-04-10 02:27:49.573 - RealTimeSTT: realtimestt - INFO - Initializing WebRTC voice with Sensitivity 3
+2026-04-10 02:27:49.573 - RealTimeSTT: realtimestt - DEBUG - WebRTC VAD voice activity detection engine initialized successfully
+2026-04-10 02:27:53.863 - RealTimeSTT: realtimestt - INFO - Starting RealTimeSTT
+2026-04-10 02:27:53.902 - RealTimeSTT: realtimestt - INFO - Starting RealTimeSTT
+2026-04-10 02:28:26.634 - RealTimeSTT: realtimestt - ERROR - Error initializing Silero VAD voice activity detection engine: Unrecognized response & C:/Users/ASUS/AppData/Local/Programs/Python/Python311/python.exe "d:/Project 2026 first year/New folder/HoloMat2-main/apps/app_4/app_4.py".
+Traceback (most recent call last):
+  File "C:\Users\ASUS\AppData\Local\Programs\Python\Python311\Lib\site-packages\RealtimeSTT\audio_recorder.py", line 922, in __init__
+    self.silero_vad_model, _ = torch.hub.load(
+                               ^^^^^^^^^^^^^^^
+  File "C:\Users\ASUS\AppData\Local\Programs\Python\Python311\Lib\site-packages\torch\hub.py", line 661, in load
+    repo_or_dir = _get_cache_or_reload(
+                  ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\ASUS\AppData\Local\Programs\Python\Python311\Lib\site-packages\torch\hub.py", line 291, in _get_cache_or_reload
+    _check_repo_is_trusted(
+  File "C:\Users\ASUS\AppData\Local\Programs\Python\Python311\Lib\site-packages\torch\hub.py", line 386, in _check_repo_is_trusted
+    raise ValueError(f"Unrecognized response {response}.")
+ValueError: Unrecognized response & C:/Users/ASUS/AppData/Local/Programs/Python/Python311/python.exe "d:/Project 2026 first year/New folder/HoloMat2-main/apps/app_4/app_4.py".
+2026-04-10 02:28:40.189 - RealTimeSTT: realtimestt - INFO - Starting RealTimeSTT
+2026-04-10 02:28:40.198 - RealTimeSTT: realtimestt - INFO - Initializing audio recording (creating pyAudio input stream, sample rate: 16000 buffer size: 512
+2026-04-10 02:28:40.204 - RealTimeSTT: realtimestt - INFO - Initializing WebRTC voice with Sensitivity 3
+2026-04-10 02:28:40.205 - RealTimeSTT: realtimestt - DEBUG - WebRTC VAD voice activity detection engine initialized successfully
+2026-04-10 02:28:44.311 - RealTimeSTT: realtimestt - INFO - Starting RealTimeSTT
+2026-04-10 02:28:44.347 - RealTimeSTT: realtimestt - INFO - Starting RealTimeSTT
+2026-04-10 02:28:53.830 - RealTimeSTT: realtimestt - ERROR - Error initializing Silero VAD voice activity detection engine: Unrecognized response & C:/Users/ASUS/AppData/Local/Programs/Python/Python311/python.exe "d:/Project 2026 first year/New folder/HoloMat2-main/apps/app_4/app_4.py".
+Traceback (most recent call last):
+  File "C:\Users\ASUS\AppData\Local\Programs\Python\Python311\Lib\site-packages\RealtimeSTT\audio_recorder.py", line 922, in __init__
+    self.silero_vad_model, _ = torch.hub.load(
+                               ^^^^^^^^^^^^^^^
+  File "C:\Users\ASUS\AppData\Local\Programs\Python\Python311\Lib\site-packages\torch\hub.py", line 661, in load
+    repo_or_dir = _get_cache_or_reload(
+                  ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\ASUS\AppData\Local\Programs\Python\Python311\Lib\site-packages\torch\hub.py", line 291, in _get_cache_or_reload
+    _check_repo_is_trusted(
+  File "C:\Users\ASUS\AppData\Local\Programs\Python\Python311\Lib\site-packages\torch\hub.py", line 386, in _check_repo_is_trusted
+    raise ValueError(f"Unrecognized response {response}.")
+ValueError: Unrecognized response & C:/Users/ASUS/AppData/Local/Programs/Python/Python311/python.exe "d:/Project 2026 first year/New folder/HoloMat2-main/apps/app_4/app_4.py".
+2026-04-10 02:29:14.307 - RealTimeSTT: realtimestt - INFO - Starting RealTimeSTT
+2026-04-10 02:29:14.316 - RealTimeSTT: realtimestt - INFO - Initializing audio recording (creating pyAudio input stream, sample rate: 16000 buffer size: 512
+2026-04-10 02:29:14.322 - RealTimeSTT: realtimestt - INFO - Initializing WebRTC voice with Sensitivity 3
+2026-04-10 02:29:14.323 - RealTimeSTT: realtimestt - DEBUG - WebRTC VAD voice activity detection engine initialized successfully
+2026-04-10 02:29:18.366 - RealTimeSTT: realtimestt - INFO - Starting RealTimeSTT
+2026-04-10 02:29:18.403 - RealTimeSTT: realtimestt - INFO - Starting RealTimeSTT
+2026-04-10 02:31:06.576 - RealTimeSTT: realtimestt - ERROR - Error initializing Silero VAD voice activity detection engine: Unrecognized response & C:/Users/ASUS/AppData/Local/Programs/Python/Python311/python.exe "d:/Project 2026 first year/New folder/HoloMat2-main/apps/app_5/app_5.py".
+Traceback (most recent call last):
+  File "C:\Users\ASUS\AppData\Local\Programs\Python\Python311\Lib\site-packages\RealtimeSTT\audio_recorder.py", line 922, in __init__
+    self.silero_vad_model, _ = torch.hub.load(
+                               ^^^^^^^^^^^^^^^
+  File "C:\Users\ASUS\AppData\Local\Programs\Python\Python311\Lib\site-packages\torch\hub.py", line 661, in load
+    repo_or_dir = _get_cache_or_reload(
+                  ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\ASUS\AppData\Local\Programs\Python\Python311\Lib\site-packages\torch\hub.py", line 291, in _get_cache_or_reload
+    _check_repo_is_trusted(
+  File "C:\Users\ASUS\AppData\Local\Programs\Python\Python311\Lib\site-packages\torch\hub.py", line 386, in _check_repo_is_trusted
+    raise ValueError(f"Unrecognized response {response}.")
+ValueError: Unrecognized response & C:/Users/ASUS/AppData/Local/Programs/Python/Python311/python.exe "d:/Project 2026 first year/New folder/HoloMat2-main/apps/app_5/app_5.py".
+2026-04-10 02:43:34.459 - RealTimeSTT: realtimestt - INFO - Starting RealTimeSTT
+2026-04-10 02:43:34.469 - RealTimeSTT: realtimestt - INFO - Initializing audio recording (creating pyAudio input stream, sample rate: 16000 buffer size: 512
+2026-04-10 02:43:34.475 - RealTimeSTT: realtimestt - INFO - Initializing WebRTC voice with Sensitivity 3
+2026-04-10 02:43:34.475 - RealTimeSTT: realtimestt - DEBUG - WebRTC VAD voice activity detection engine initialized successfully
+2026-04-10 02:43:39.510 - RealTimeSTT: realtimestt - INFO - Starting RealTimeSTT
+2026-04-10 02:43:39.550 - RealTimeSTT: realtimestt - INFO - Starting RealTimeSTT
+2026-04-10 02:43:49.330 - RealTimeSTT: realtimestt - ERROR - Error initializing Silero VAD voice activity detection engine: Unrecognized response & C:/Users/ASUS/AppData/Local/Programs/Python/Python311/python.exe "d:/Project 2026 first year/New folder/HoloMat2-main/apps/app_4/app_4.py".
+Traceback (most recent call last):
+  File "C:\Users\ASUS\AppData\Local\Programs\Python\Python311\Lib\site-packages\RealtimeSTT\audio_recorder.py", line 922, in __init__
+    self.silero_vad_model, _ = torch.hub.load(
+                               ^^^^^^^^^^^^^^^
+  File "C:\Users\ASUS\AppData\Local\Programs\Python\Python311\Lib\site-packages\torch\hub.py", line 661, in load
+    repo_or_dir = _get_cache_or_reload(
+                  ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\ASUS\AppData\Local\Programs\Python\Python311\Lib\site-packages\torch\hub.py", line 291, in _get_cache_or_reload
+    _check_repo_is_trusted(
+  File "C:\Users\ASUS\AppData\Local\Programs\Python\Python311\Lib\site-packages\torch\hub.py", line 386, in _check_repo_is_trusted
+    raise ValueError(f"Unrecognized response {response}.")
+ValueError: Unrecognized response & C:/Users/ASUS/AppData/Local/Programs/Python/Python311/python.exe "d:/Project 2026 first year/New folder/HoloMat2-main/apps/app_4/app_4.py".
+2026-04-10 02:44:00.109 - RealTimeSTT: realtimestt - INFO - Starting RealTimeSTT
+2026-04-10 02:44:00.117 - RealTimeSTT: realtimestt - INFO - Initializing audio recording (creating pyAudio input stream, sample rate: 16000 buffer size: 512
+2026-04-10 02:44:00.125 - RealTimeSTT: realtimestt - INFO - Initializing WebRTC voice with Sensitivity 3
+2026-04-10 02:44:00.126 - RealTimeSTT: realtimestt - DEBUG - WebRTC VAD voice activity detection engine initialized successfully
+2026-04-10 02:44:04.265 - RealTimeSTT: realtimestt - INFO - Starting RealTimeSTT
+2026-04-10 02:44:04.301 - RealTimeSTT: realtimestt - INFO - Starting RealTimeSTT
+2026-04-10 02:44:17.929 - RealTimeSTT: realtimestt - DEBUG - Silero VAD voice activity detection engine initialized successfully
+2026-04-10 02:44:17.930 - RealTimeSTT: realtimestt - DEBUG - Starting realtime worker
+2026-04-10 02:44:17.930 - RealTimeSTT: realtimestt - DEBUG - Waiting for main transcription model to start
+2026-04-10 02:47:14.863 - RealTimeSTT: realtimestt - INFO - Starting RealTimeSTT
+2026-04-10 02:47:14.873 - RealTimeSTT: realtimestt - INFO - Initializing audio recording (creating pyAudio input stream, sample rate: 16000 buffer size: 512
+2026-04-10 02:47:14.878 - RealTimeSTT: realtimestt - INFO - Initializing WebRTC voice with Sensitivity 3
+2026-04-10 02:47:14.878 - RealTimeSTT: realtimestt - DEBUG - WebRTC VAD voice activity detection engine initialized successfully
+2026-04-10 02:47:15.846 - RealTimeSTT: realtimestt - DEBUG - Silero VAD voice activity detection engine initialized successfully
+2026-04-10 02:47:15.848 - RealTimeSTT: realtimestt - DEBUG - Starting realtime worker
+2026-04-10 02:47:15.848 - RealTimeSTT: realtimestt - DEBUG - Waiting for main transcription model to start
+2026-04-10 02:47:20.313 - RealTimeSTT: realtimestt - INFO - Starting RealTimeSTT
+2026-04-10 02:47:20.352 - RealTimeSTT: realtimestt - INFO - Starting RealTimeSTT
+2026-04-10 03:04:21.114 - RealTimeSTT: realtimestt - INFO - Starting RealTimeSTT
+2026-04-10 03:04:21.124 - RealTimeSTT: realtimestt - INFO - Initializing audio recording (creating pyAudio input stream, sample rate: 16000 buffer size: 512
+2026-04-10 03:04:21.131 - RealTimeSTT: realtimestt - INFO - Initializing WebRTC voice with Sensitivity 3
+2026-04-10 03:04:21.131 - RealTimeSTT: realtimestt - DEBUG - WebRTC VAD voice activity detection engine initialized successfully
+2026-04-10 03:04:22.041 - RealTimeSTT: realtimestt - DEBUG - Silero VAD voice activity detection engine initialized successfully
+2026-04-10 03:04:22.043 - RealTimeSTT: realtimestt - DEBUG - Starting realtime worker
+2026-04-10 03:04:22.044 - RealTimeSTT: realtimestt - DEBUG - Waiting for main transcription model to start
+2026-04-10 03:11:12.838 - RealTimeSTT: realtimestt - INFO - Starting RealTimeSTT
+2026-04-10 03:11:12.849 - RealTimeSTT: realtimestt - INFO - Initializing audio recording (creating pyAudio input stream, sample rate: 16000 buffer size: 512
+2026-04-10 03:11:12.857 - RealTimeSTT: realtimestt - INFO - Initializing WebRTC voice with Sensitivity 3
+2026-04-10 03:11:12.857 - RealTimeSTT: realtimestt - DEBUG - WebRTC VAD voice activity detection engine initialized successfully
+2026-04-10 03:11:13.977 - RealTimeSTT: realtimestt - DEBUG - Silero VAD voice activity detection engine initialized successfully
+2026-04-10 03:11:13.980 - RealTimeSTT: realtimestt - DEBUG - Starting realtime worker
+2026-04-10 03:11:13.980 - RealTimeSTT: realtimestt - DEBUG - Waiting for main transcription model to start
+2026-04-10 03:11:19.489 - RealTimeSTT: realtimestt - DEBUG - Main transcription model ready
+2026-04-10 03:11:19.490 - RealTimeSTT: realtimestt - DEBUG - RealtimeSTT initialization completed successfully
+2026-04-10 03:11:53.253 - RealTimeSTT: realtimestt - INFO - Starting RealTimeSTT
+2026-04-10 03:11:53.262 - RealTimeSTT: realtimestt - INFO - Initializing audio recording (creating pyAudio input stream, sample rate: 16000 buffer size: 512
+2026-04-10 03:11:53.270 - RealTimeSTT: realtimestt - INFO - Initializing WebRTC voice with Sensitivity 3
+2026-04-10 03:11:53.270 - RealTimeSTT: realtimestt - DEBUG - WebRTC VAD voice activity detection engine initialized successfully
+2026-04-10 03:11:54.007 - RealTimeSTT: realtimestt - DEBUG - Silero VAD voice activity detection engine initialized successfully
+2026-04-10 03:11:54.009 - RealTimeSTT: realtimestt - DEBUG - Starting realtime worker
+2026-04-10 03:11:54.009 - RealTimeSTT: realtimestt - DEBUG - Waiting for main transcription model to start
+2026-04-10 03:12:01.445 - RealTimeSTT: realtimestt - DEBUG - Main transcription model ready
+2026-04-10 03:12:01.446 - RealTimeSTT: realtimestt - DEBUG - RealtimeSTT initialization completed successfully
+2026-04-10 03:15:46.504 - RealTimeSTT: realtimestt - INFO - Starting RealTimeSTT
+2026-04-10 03:15:46.515 - RealTimeSTT: realtimestt - INFO - Initializing audio recording (creating pyAudio input stream, sample rate: 16000 buffer size: 512
+2026-04-10 03:15:46.523 - RealTimeSTT: realtimestt - INFO - Initializing WebRTC voice with Sensitivity 3
+2026-04-10 03:15:46.523 - RealTimeSTT: realtimestt - DEBUG - WebRTC VAD voice activity detection engine initialized successfully
+2026-04-10 03:15:47.465 - RealTimeSTT: realtimestt - DEBUG - Silero VAD voice activity detection engine initialized successfully
+2026-04-10 03:15:47.473 - RealTimeSTT: realtimestt - DEBUG - Starting realtime worker
+2026-04-10 03:15:47.474 - RealTimeSTT: realtimestt - DEBUG - Waiting for main transcription model to start
+2026-04-10 03:15:54.368 - RealTimeSTT: realtimestt - DEBUG - Main transcription model ready
+2026-04-10 03:15:54.369 - RealTimeSTT: realtimestt - DEBUG - RealtimeSTT initialization completed successfully
+2026-04-10 03:16:14.952 - RealTimeSTT: realtimestt - DEBUG - Receive from stdout pipe
+2026-04-10 03:16:14.952 - RealTimeSTT: realtimestt - INFO - None
+2026-04-10 03:20:46.700 - RealTimeSTT: realtimestt - INFO - Starting RealTimeSTT
+2026-04-10 03:20:46.708 - RealTimeSTT: realtimestt - INFO - Initializing audio recording (creating pyAudio input stream, sample rate: 16000 buffer size: 512
+2026-04-10 03:20:46.713 - RealTimeSTT: realtimestt - INFO - Initializing WebRTC voice with Sensitivity 3
+2026-04-10 03:20:46.714 - RealTimeSTT: realtimestt - DEBUG - WebRTC VAD voice activity detection engine initialized successfully
+2026-04-10 03:20:47.643 - RealTimeSTT: realtimestt - DEBUG - Silero VAD voice activity detection engine initialized successfully
+2026-04-10 03:20:47.645 - RealTimeSTT: realtimestt - DEBUG - Starting realtime worker
+2026-04-10 03:20:47.645 - RealTimeSTT: realtimestt - DEBUG - Waiting for main transcription model to start
+2026-04-10 03:20:51.757 - RealTimeSTT: realtimestt - INFO - Starting RealTimeSTT
+2026-04-10 03:20:51.796 - RealTimeSTT: realtimestt - INFO - Starting RealTimeSTT
