@@ -1,0 +1,408 @@
+from direct.showbase.ShowBase import ShowBase
+from direct.gui.OnscreenText import OnscreenText
+from direct.gui.DirectGui import DirectButton, DirectFrame
+from panda3d.core import (
+    AmbientLight, DirectionalLight,
+    loadPrcFileData, TextNode
+)
+
+import cv2
+import mediapipe as mp
+import numpy as np
+import pyautogui
+import math
+import time
+
+# تحسين جودة الألوان
+loadPrcFileData("", "framebuffer-srgb true")
+
+
+class Viewer(ShowBase):
+    def __init__(self):
+        super().__init__()
+
+        # =============================
+        #  BASIC SETTINGS
+        # =============================
+        self.setBackgroundColor(0.02, 0.03, 0.10)
+        self.disableMouse()
+        self.mode = "rotate"
+        base_y = 0.45
+
+        # =============================
+        #  INFO BOX
+        # =============================
+        self.info_frame = DirectFrame(
+            frameColor=(0, 0, 0, 0),
+            frameSize=(-0.65, 0.65, -0.55, 0.5),
+            pos=(-0.85, 0, base_y),
+            parent=self.aspect2d
+        )
+
+        OnscreenText(
+            text="Name: Iron Man",
+            pos=(-0.5, 0.3),
+            scale=0.06,
+            fg=(1, 1, 1, 1),
+            align=TextNode.ALeft,
+            parent=self.info_frame
+        )
+
+        OnscreenText(
+            text="Format: .GLB",
+            pos=(-0.5, 0.15),
+            scale=0.05,
+            fg=(0.75, 0.85, 1, 1),
+            align=TextNode.ALeft,
+            parent=self.info_frame
+        )
+
+        OnscreenText(
+            text="Colors: Red / Gold / White",
+            pos=(-0.5, 0.0),
+            scale=0.05,
+            fg=(1, 0.85, 0.3, 1),
+            align=TextNode.ALeft,
+            parent=self.info_frame
+        )
+
+        # =============================
+        #  BUILD SECTION
+        # =============================
+        OnscreenText(
+            text="Build:",
+            pos=(-0.5, -0.15),
+            scale=0.055,
+            fg=(1, 1, 1, 1),
+            align=TextNode.ALeft,
+            parent=self.info_frame
+        )
+
+        self.build_text = OnscreenText(
+            text=(
+                "Iron Man is a highly advanced powered suit made from strong, lightweight materials "
+                "designed to provide maximum protection and mobility. It is equipped with jet propulsion "
+                "for high-speed flight, a powerful energy core, and advanced weapons systems. "
+                "The suit also includes intelligent AI control for navigation, targeting, and decision-making, "
+                "allowing efficient performance and high-level protection."
+            ),
+            pos=(-0.5, -0.30),
+            scale=0.045,
+            fg=(0.8, 0.9, 1, 1),
+            align=TextNode.ALeft,
+            parent=self.info_frame,
+            wordwrap=28
+        )
+
+        # =============================
+        #  CONTROLS BOX
+        # =============================
+        self.controls_frame = DirectFrame(
+            frameColor=(0, 0, 0, 0),
+            frameSize=(-0.5, 0.5, -0.5, 0.5),
+            pos=(-0.20, 0, base_y),
+            parent=self.aspect2d
+        )
+
+        OnscreenText(
+            text="Controls",
+            pos=(0, 0.12),
+            scale=0.06,
+            fg=(0.8, 0.9, 1, 1),
+            align=TextNode.ACenter,
+            parent=self.controls_frame
+        )
+
+        self.rotate_btn = self.create_button("Rotate", -0.28, -0.02, self.set_rotate_mode)
+        self.zoom_btn = self.create_button("Zoom", 0.0, -0.02, self.set_zoom_mode)
+        self.move_btn = self.create_button("Move", 0.28, -0.02, self.set_move_mode)
+
+        self.highlight_active_button(self.rotate_btn)
+
+        # =============================
+        #  MODEL
+        # =============================
+        self.pivot = self.render.attachNewNode("pivot_node")
+        self.model = self.loader.loadModel("tonystark.glb")
+        self.model.reparentTo(self.pivot)
+        self.model.setHpr(0, 90, 0)
+
+        bounds = self.model.getTightBounds()
+        center = (bounds[0] + bounds[1]) * 0.5
+        self.model.setPos(-center)
+
+        # =============================
+        #  CAMERA
+        # =============================
+        self.camera.setPos(0, -10, 0)
+        self.camera.lookAt(self.pivot)
+
+        # =============================
+        #  LIGHTING
+        # =============================
+        dlight = DirectionalLight('dlight')
+        dlight.setColor((2.2, 2.2, 2.2, 1))
+        dlnp = self.render.attachNewNode(dlight)
+        dlnp.setHpr(45, -45, 0)
+        self.render.setLight(dlnp)
+
+        alight = AmbientLight('alight')
+        alight.setColor((0.9, 0.9, 1.0, 1))
+        alnp = self.render.attachNewNode(alight)
+        self.render.setLight(alnp)
+
+        self.render.setShaderAuto()
+
+        # =============================
+        #  MEDIAPIPE SETUP
+        # =============================
+        self.cap = cv2.VideoCapture(0)
+        if not self.cap.isOpened():
+            raise RuntimeError("Unable to open the camera")
+
+        self.mp_hands = mp.solutions.hands
+        self.mp_draw = mp.solutions.drawing_utils
+
+        self.hands = self.mp_hands.Hands(
+            max_num_hands=1,
+            model_complexity=0,
+            min_detection_confidence=0.85,
+            min_tracking_confidence=0.85
+        )
+
+        # =============================
+        #  AIR CLICK SETUP
+        # =============================
+        self.screen_w, self.screen_h = pyautogui.size()
+        pyautogui.FAILSAFE = False
+
+        self.SMOOTH = 0.2
+        self.STABILITY_LIMIT = 8
+        self.COOLDOWN = 0.5
+        self.CLICK_THRESHOLD = 35
+
+        self.last_click_time = 0
+        self.is_clicking = False
+        self.smooth_x = self.screen_w // 2
+        self.smooth_y = self.screen_h // 2
+        self.prev_sx = self.screen_w // 2
+        self.prev_sy = self.screen_h // 2
+
+        # متغيرات التحريك
+        self.curr_x = 0
+        self.curr_z = 0
+        self.follow_speed = 0.2
+
+        self.taskMgr.add(self.gesture_task, "gesture_task")
+
+        # =============================
+        #  MOUSE CONTROLS
+        # =============================
+        self.dragging = False
+        self.last_mouse_pos = (0, 0)
+
+        self.accept("mouse1", self.start_drag)
+        self.accept("mouse1-up", self.stop_drag)
+        self.taskMgr.add(self.mouse_task, "mouse_task")
+
+    # =============================
+    #  BUTTON CREATION
+    # =============================
+    def create_button(self, text, x, z, command):
+        return DirectButton(
+            text=text,
+            scale=0.06,
+            pos=(x, 0, z),
+            command=command,
+            parent=self.controls_frame,
+            relief=1,
+            frameSize=(-1.2, 1.2, -0.5, 0.5),
+            frameColor=(
+                (0.15, 0.2, 0.4, 1),
+                (0.25, 0.35, 0.65, 1),
+                (0.1, 0.15, 0.3, 1),
+                (0.3, 0.3, 0.3, 1)
+            ),
+            text_fg=(1, 1, 1, 1),
+            text_scale=0.5,
+            text_pos=(0, -0.05),
+            borderWidth=(0.03, 0.03)
+        )
+
+    def highlight_active_button(self, active_btn):
+        buttons = [self.rotate_btn, self.zoom_btn, self.move_btn]
+        for btn in buttons:
+            btn["frameColor"] = (
+                (0.15, 0.2, 0.4, 1),
+                (0.25, 0.35, 0.65, 1),
+                (0.1, 0.15, 0.3, 1),
+                (0.3, 0.3, 0.3, 1)
+            )
+
+        active_btn["frameColor"] = (
+            (0.9, 0.6, 0.2, 1),
+            (1.0, 0.7, 0.3, 1),
+            (0.8, 0.5, 0.1, 1),
+            (0.5, 0.5, 0.5, 1)
+        )
+
+    # =============================
+    #  MODES
+    # =============================
+    def set_rotate_mode(self):
+        self.mode = "rotate"
+        self.highlight_active_button(self.rotate_btn)
+
+    def set_zoom_mode(self):
+        self.mode = "zoom"
+        self.highlight_active_button(self.zoom_btn)
+
+    def set_move_mode(self):
+        self.mode = "move"
+        self.highlight_active_button(self.move_btn)
+
+    # =============================
+    #  تحويل الإحداثيات
+    # =============================
+    def landmarks_to_screen(self, lm, frame_w, frame_h):
+        x = int(lm.x * frame_w)
+        y = int(lm.y * frame_h)
+        sx = int(np.interp(x, [50, frame_w - 50], [0, self.screen_w]))
+        sy = int(np.interp(y, [50, frame_h - 50], [0, self.screen_h]))
+        return x, y, sx, sy
+
+    # =============================
+    #  GESTURE CONTROL
+    # =============================
+    def gesture_task(self, task):
+        ret, frame = self.cap.read()
+        if not ret:
+            return task.cont
+
+        frame = cv2.flip(frame, 1)
+        rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        results = self.hands.process(rgb)
+
+        if results.multi_hand_landmarks:
+            hand_lm = results.multi_hand_landmarks[0]
+            lms = hand_lm.landmark
+            frame_h, frame_w, _ = frame.shape
+            current_time = time.time()
+
+            self.mp_draw.draw_landmarks(
+                frame, hand_lm, self.mp_hands.HAND_CONNECTIONS
+            )
+
+            # Air Click
+            tip8_x, tip8_y, s8x, s8y = self.landmarks_to_screen(
+                lms[8], frame_w, frame_h
+            )
+            tip4_x, tip4_y, _, _ = self.landmarks_to_screen(
+                lms[4], frame_w, frame_h
+            )
+
+            movement_dist = np.hypot(s8x - self.prev_sx, s8y - self.prev_sy)
+            if movement_dist > self.STABILITY_LIMIT:
+                self.smooth_x += self.SMOOTH * (s8x - self.smooth_x)
+                self.smooth_y += self.SMOOTH * (s8y - self.smooth_y)
+                self.prev_sx, self.prev_sy = s8x, s8y
+
+            pyautogui.moveTo(int(self.smooth_x), int(self.smooth_y))
+
+            dist_click = np.hypot(tip8_x - tip4_x, tip8_y - tip4_y)
+            click_ready = current_time - self.last_click_time > self.COOLDOWN
+
+            if dist_click < self.CLICK_THRESHOLD and click_ready and not self.is_clicking:
+                pyautogui.click()
+                self.last_click_time = current_time
+                self.is_clicking = True
+            elif dist_click >= self.CLICK_THRESHOLD:
+                self.is_clicking = False
+
+            # Zoom
+            zoom_dist = math.hypot(
+                lms[4].x - lms[8].x,
+                lms[4].y - lms[8].y
+            )
+            zoom_value = np.interp(zoom_dist, [0.05, 0.4], [-5, -25])
+            self.camera.setY(zoom_value)
+
+            # Move
+            if zoom_dist < 0.06:
+                self.set_move_mode()
+                target_x = (lms[8].x - 0.5) * 10
+                target_z = (0.5 - lms[8].y) * 10
+                self.curr_x += (target_x - self.curr_x) * self.follow_speed
+                self.curr_z += (target_z - self.curr_z) * self.follow_speed
+                self.pivot.setX(self.curr_x)
+                self.pivot.setZ(self.curr_z)
+
+            # Rotate
+            index_up = lms[8].y < lms[6].y
+            others_down = all(
+                lms[t].y > lms[p].y
+                for t, p in [(12, 10), (16, 14), (20, 18)]
+            )
+
+            if index_up and others_down:
+                self.set_rotate_mode()
+                angle_y = (lms[8].x - 0.5) * 180
+                angle_x = (lms[8].y - 0.5) * -180
+                self.pivot.setH(angle_y)
+                self.pivot.setP(angle_x)
+
+            cv2.imshow("Air Click", frame)
+            cv2.waitKey(1)
+
+        return task.cont
+
+    # =============================
+    #  MOUSE CONTROL
+    # =============================
+    def start_drag(self):
+        if self.mouseWatcherNode.hasMouse():
+            self.dragging = True
+            mpos = self.mouseWatcherNode.getMouse()
+            self.last_mouse_pos = (mpos.getX(), mpos.getY())
+
+    def stop_drag(self):
+        self.dragging = False
+
+    def mouse_task(self, task):
+        if self.dragging and self.mouseWatcherNode.hasMouse():
+            mpos = self.mouseWatcherNode.getMouse()
+            curr_pos = (mpos.getX(), mpos.getY())
+
+            dx = curr_pos[0] - self.last_mouse_pos[0]
+            dy = curr_pos[1] - self.last_mouse_pos[1]
+
+            if self.mode == "rotate":
+                self.pivot.setH(self.pivot.getH() - dx * 100)
+                self.pivot.setP(self.pivot.getP() + dy * 100)
+
+            elif self.mode == "zoom":
+                self.camera.setY(self.camera.getY() + dy * 10)
+
+            elif self.mode == "move":
+                self.pivot.setX(self.pivot.getX() + dx * 5)
+                self.pivot.setZ(self.pivot.getZ() + dy * 5)
+
+            self.last_mouse_pos = curr_pos
+
+        return task.cont
+
+    # =============================
+    #  CLEANUP
+    # =============================
+    def destroy(self):
+        if hasattr(self, "cap") and self.cap.isOpened():
+            self.cap.release()
+        cv2.destroyAllWindows()
+        super().destroy()
+
+
+# =============================
+#  RUN APPLICATION
+# =============================
+app = Viewer()
+app.run()
