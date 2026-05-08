@@ -1,3 +1,4 @@
+# Main.py
 from direct.showbase.ShowBase import ShowBase
 from direct.gui.OnscreenText import OnscreenText
 from direct.gui.DirectGui import DirectButton, DirectFrame, OnscreenImage
@@ -8,110 +9,111 @@ from panda3d.core import (
 import cv2
 import mediapipe as mp
 import math
+import numpy as np
+import pyautogui
+import time
+import os
 
-# اعدادات لضمان الجودة والظهور
+# --- استيراد الموديولات الجديدة ---
+from hologram_ui import HologramUI
+from interaction import InteractionManager
+
+# اعدادات الجودة
 loadPrcFileData("", "framebuffer-srgb true")
 loadPrcFileData("", "textures-power-2 none")
+
+pyautogui.FAILSAFE = False
+pyautogui.PAUSE = 0 
+SCREEN_W, SCREEN_H = pyautogui.size()
 
 class Viewer(ShowBase):
     def __init__(self):
         super().__init__()
 
-        # 1. الخلفية والـ Sorting (عشان الموديل يفضل ظاهر)
-        self.background = OnscreenImage(image='i-ron.jpeg', pos=(0, 0, 0), parent=self.render2d)
-        self.background.setBin('background', -100)
-        self.background.setDepthWrite(False)
+        # 1. تحميل ملفات الصوت وتحضيرها
+        self.intro_voice = self.loader.loadSfx("intro_voice.mp3")
+        self.helmet_voice = self.loader.loadSfx("helmet.mp3")
+        self.arcreactor_voice = self.loader.loadSfx("arcreactor.mp3")
+        self.repulsors_voice = self.loader.loadSfx("repulsors.mp3")
+        self.thrusters_voice = self.loader.loadSfx("flightthrusters.mp3") # تحميل صوت المحركات
+        
+        self.voice_played = False # لضمان تشغيل صوت البداية مرة واحدة فقط
+
+        # --- إعدادات الأداء ---
+        self.SENSITIVITY = 1.2   
+        self.SMOOTH = 0.3        
+        self.DEAD_ZONE = 5       
+        self.COOLDOWN = 0.3      
+        self.CLICK_THRESHOLD = 0.04 
+        
+        self.last_click_time = 0
+        self.smooth_x = SCREEN_W // 2
+        self.smooth_y = SCREEN_H // 2
+        self.prev_sx = SCREEN_W // 2
+        self.prev_sy = SCREEN_H // 2
+
+        # 1. الخلفية
+        try:
+            self.background = OnscreenImage(image='plainbackground.jpeg', pos=(0, 0, 0), parent=self.render2d)
+            self.background.setBin('background', -100)
+            self.background.setDepthWrite(False)
+        except:
+            print("Warning: Background image 'plainbackground.jpeg' not found.")
+        
         self.cam.node().getDisplayRegion(0).setSort(20)
 
-        # 2. الموديل (ايرون مان)
+        # 2. الموديل
         self.pivot = self.render.attachNewNode("ironman_pivot")
         try:
             self.model = self.loader.loadModel("tonystark.glb")
             self.model.reparentTo(self.pivot)
-            self.model.setHpr(0, 90, 0)
-
+            self.model.setColorScale(4.0, 4.0, 4.0, 1.0)
+            self.model.setHpr(0, 0, 0) 
             b_min, b_max = self.model.getTightBounds()
-            center = (b_min + b_max) / 2.0
-            self.model.setPos(-center)
-
+            self.model.setPos(-(b_min[0] + b_max[0])/2, -(b_min[1] + b_max[1])/2, -b_min[2])
             self.pivot.setScale(2.5)
-            self.pivot.setPos(0, 20, -3)
+            self.pivot.setPos(0, 20, -2.5) 
             self.render.setShaderAuto()
         except:
-            print("Model load error - using fallback cube")
-            from panda3d.core import GeomVertexFormat, GeomVertexData
-            from panda3d.core import Geom, GeomTriangles, GeomVertexWriter
-            from panda3d.core import GeomNode
-
-            format = GeomVertexFormat.getV3n3c4()
-            vdata = GeomVertexData('cube', format, Geom.UHStatic)
-            vertex = GeomVertexWriter(vdata, 'vertex')
-            normal = GeomVertexWriter(vdata, 'normal')
-            color = GeomVertexWriter(vdata, 'color')
-
-            for x, y, z in [(-1,-1,-1),(1,-1,-1),(1,1,-1),(-1,1,-1),(-1,-1,1),(1,-1,1),(1,1,1),(-1,1,1)]:
-                vertex.addData3(x, y, z)
-                normal.addData3(0, 0, 1)
-                color.addData4f(0.8, 0.1, 0.1, 1)
-
-            prim = GeomTriangles(Geom.UHStatic)
-            for f in [(0,1,2),(0,2,3),(4,6,5),(4,7,6),(0,5,1),(0,4,5),(2,6,7),(2,1,6),(0,7,4),(0,3,7),(1,5,6),(1,6,2)]:
-                prim.addVertices(*f)
-
-            geom = Geom(vdata)
-            geom.addPrimitive(prim)
-            node = GeomNode('cube')
-            node.addGeom(geom)
-            self.model = self.pivot.attachNewNode(node)
-            self.model.setScale(2)
+            pass
 
         # 3. الاضاءة
         alight = AmbientLight('alight')
-        alight.setColor((0.8, 0.8, 0.8, 1))
+        alight.setColor((1.8, 1.8, 1.8, 1))
         self.render.setLight(self.render.attachNewNode(alight))
-
+        
         dlight = DirectionalLight('dlight')
-        dlight.setColor((1.5, 1.5, 1.5, 1))
+        dlight.setColor((2.5, 2.5, 2.5, 1))
         dlnp = self.render.attachNewNode(dlight)
-        dlnp.setPos(0, -10, 10)
+        dlnp.setPos(0, -15, 15)
         dlnp.lookAt(self.pivot)
         self.render.setLight(dlnp)
 
-        # 4. التحكم (Mouse & Gestures)
+        # 4. التحكم والواجهة
         self.mode = "rotate"
         self.setup_ui()
+        
+        self.hologram_sys = HologramUI(self.aspect2d)
+        self.interact_sys = InteractionManager(self, self.model, self.hologram_sys)
+        
         self.setup_gestures()
-
         self.disableMouse()
         self.camera.setPos(0, 0, 0)
         self.camera.lookAt(self.pivot)
 
-        # الماوس والتحريك
         self.dragging = False
         self.last_mpos = (0, 0)
         self.accept("mouse1", self.start_drag)
         self.accept("mouse1-up", self.stop_drag)
 
-        # متغيرات الجيستشر
-        self.gesture_active = False
-        self.gesture_mode = "none"
         self.last_pinch_dist = 0
-        self.grab_offset = (0, 0)
-
-        # اضافة المهام (Tasks)
         self.taskMgr.add(self.control_task, "control_task")
 
     def setup_ui(self):
-        # العنوان
-        OnscreenText(text="Your Hand-Your World", pos=(-1.5, 0.85), scale=0.06, 
+        OnscreenText(text="STARK OS - EXCLUSIVE MODE", pos=(-1.2, 0.85), scale=0.06, 
                     fg=(0,1,1,1), align=TextNode.ALeft, parent=self.aspect2d)
-        OnscreenText(text="", pos=(-1.1, 0.75), scale=0.04, 
-                    fg=(1,1,0,1), align=TextNode.ALeft, parent=self.aspect2d)
-
-        # فريم الزراير
         self.controls_frame = DirectFrame(frameColor=(0,0,0,0.4), pos=(0, 0, -0.85), 
                                          frameSize=(-0.8, 0.8, -0.12, 0.12), parent=self.aspect2d)
-
         self.btn_rot = self.create_button("ROTATE", -0.5, lambda: self.set_mode("rotate"))
         self.btn_zoom = self.create_button("ZOOM", 0, lambda: self.set_mode("zoom"))
         self.btn_move = self.create_button("MOVE", 0.5, lambda: self.set_mode("move"))
@@ -123,19 +125,22 @@ class Viewer(ShowBase):
 
     def set_mode(self, mode):
         self.mode = mode
+        self.last_pinch_dist = 0 
         self.btn_rot["frameColor"] = (0.9, 0.5, 0.1, 1) if mode == "rotate" else (0.2, 0.2, 0.2, 1)
         self.btn_zoom["frameColor"] = (0.9, 0.5, 0.1, 1) if mode == "zoom" else (0.2, 0.2, 0.2, 1)
         self.btn_move["frameColor"] = (0.9, 0.5, 0.1, 1) if mode == "move" else (0.2, 0.2, 0.2, 1)
 
     def setup_gestures(self):
         self.cap = cv2.VideoCapture(0)
+        self.cap.set(cv2.CAP_PROP_FPS, 60)
         self.mp_hands = mp.solutions.hands
-        self.hands = self.mp_hands.Hands(max_num_hands=1, min_detection_confidence=0.7, 
-                                         min_tracking_confidence=0.7)
+        self.hands = self.mp_hands.Hands(max_num_hands=1, min_detection_confidence=0.8, 
+                                         min_tracking_confidence=0.8)
         self.mp_draw = mp.solutions.drawing_utils
 
     def start_drag(self):
         if self.mouseWatcherNode.hasMouse():
+            self.interact_sys.process_selection()
             self.dragging = True
             mpos = self.mouseWatcherNode.getMouse()
             self.last_mpos = (mpos.getX(), mpos.getY())
@@ -143,43 +148,11 @@ class Viewer(ShowBase):
     def stop_drag(self):
         self.dragging = False
 
-    def detect_gesture(self, lms):
-        thumb_tip = lms[4]
-        index_tip = lms[8]
-        index_pip = lms[6]
-        middle_tip = lms[12]
-        middle_pip = lms[10]
-        ring_tip = lms[16]
-        ring_pip = lms[14]
-        pinky_tip = lms[20]
-        pinky_pip = lms[18]
-
-        index_up = index_tip.y < index_pip.y
-        middle_up = middle_tip.y < middle_pip.y
-        ring_up = ring_tip.y < ring_pip.y
-        pinky_up = pinky_tip.y < pinky_pip.y
-
-        pinch_dist = math.hypot(index_tip.x - thumb_tip.x, index_tip.y - thumb_tip.y)
-
-        if pinch_dist < 0.08:
-            return "zoom", {"dist": pinch_dist, "center": ((thumb_tip.x + index_tip.x)/2, 
-                                                          (thumb_tip.y + index_tip.y)/2)}
-
-        if index_up and not middle_up and not ring_up and not pinky_up:
-            return "rotate", {"x": index_tip.x, "y": index_tip.y}
-
-        if index_up and middle_up and ring_up and pinky_up:
-            palm_center = ((lms[0].x + lms[9].x)/2, (lms[0].y + lms[9].y)/2)
-            return "move", {"x": palm_center[0], "y": palm_center[1]}
-
-        return "none", {}
-
     def control_task(self, task):
         if self.dragging and self.mouseWatcherNode.hasMouse():
             mpos = self.mouseWatcherNode.getMouse()
             dx = mpos.getX() - self.last_mpos[0]
             dy = mpos.getY() - self.last_mpos[1]
-
             if self.mode == "rotate":
                 self.pivot.setH(self.pivot.getH() - dx * 100)
                 self.pivot.setP(self.pivot.getP() + dy * 100)
@@ -188,105 +161,104 @@ class Viewer(ShowBase):
             elif self.mode == "move":
                 self.pivot.setX(self.pivot.getX() + dx * 15)
                 self.pivot.setZ(self.pivot.getZ() + dy * 15)
-
             self.last_mpos = (mpos.getX(), mpos.getY())
 
         ret, frame = self.cap.read()
         if ret:
-            frame = cv2.flip(frame, 1)
-            h, w = frame.shape[:2]
-            display = frame.copy()
+            if not self.voice_played:
+                if self.intro_voice:
+                    self.intro_voice.play()
+                self.voice_played = True 
 
+            frame = cv2.flip(frame, 1)
+            display = frame.copy()
             rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
             results = self.hands.process(rgb)
 
-            gesture_text = "No Hand"
+            gesture_text = "IDLE"
             gesture_color = (128, 128, 128)
 
             if results.multi_hand_landmarks:
                 hand_lms = results.multi_hand_landmarks[0]
                 lms = hand_lms.landmark
-
                 self.mp_draw.draw_landmarks(display, hand_lms, self.mp_hands.HAND_CONNECTIONS)
 
-                gesture, data = self.detect_gesture(lms)
+                idx_tip = lms[8]
+                sx = int(((idx_tip.x * SCREEN_W) * self.SENSITIVITY))
+                sy = int(((idx_tip.y * SCREEN_H) * self.SENSITIVITY))
+                sx = max(0, min(SCREEN_W, sx))
+                sy = max(0, min(SCREEN_H, sy))
+                nx = sx if abs(sx - self.prev_sx) > self.DEAD_ZONE else self.prev_sx
+                ny = sy if abs(sy - self.prev_sy) > self.DEAD_ZONE else self.prev_sy
+                self.smooth_x = self.smooth_x + self.SMOOTH * (nx - self.smooth_x)
+                self.smooth_y = self.smooth_y + self.SMOOTH * (ny - self.smooth_y)
+                self.prev_sx, self.prev_sy = int(self.smooth_x), int(self.smooth_y)
+                pyautogui.moveTo(int(self.smooth_x), int(self.smooth_y), duration=0)
 
-                if gesture == "rotate":
-                    gesture_text = "ROTATE"
-                    gesture_color = (0, 255, 255)
-
-                    angle_y = (data["x"] - 0.5) * 360
-                    angle_x = (data["y"] - 0.5) * -360
-
-                    current_h = self.pivot.getH()
-                    current_p = self.pivot.getP()
-
-                    self.pivot.setH(current_h + (angle_y - current_h) * 0.1)
-                    self.pivot.setP(current_p + (angle_x - current_p) * 0.1)
-
-                elif gesture == "zoom":
-                    gesture_text = "ZOOM"
+                pinch_dist = math.hypot(lms[8].x - lms[4].x, lms[8].y - lms[4].y)
+                if pinch_dist < self.CLICK_THRESHOLD:
+                    gesture_text = "SYSTEM CLICK!"
                     gesture_color = (0, 255, 0)
+                    current_time = time.time()
+                    if current_time - self.last_click_time > self.COOLDOWN:
+                        pyautogui.click()
+                        self.last_click_time = current_time
 
-                    curr_dist = data["dist"]
+                index_tip = lms[8]
+                index_up = index_tip.y < lms[6].y
+                middle_up = lms[12].y < lms[10].y
+                ring_up = lms[16].y < lms[14].y
+                pinky_up = lms[20].y < lms[18].y
 
-                    if self.last_pinch_dist > 0:
-                        delta = curr_dist - self.last_pinch_dist
-                        new_y = self.pivot.getY() - delta * 200
-                        new_y = max(5, min(100, new_y))
-                        self.pivot.setY(new_y)
+                if self.mode == "rotate":
+                    if index_up and not middle_up and not ring_up and not pinky_up:
+                        gesture_text = "ROTATING"
+                        gesture_color = (0, 255, 255)
+                        target_h = (index_tip.x - 0.5) * 180
+                        target_p = (index_tip.y - 0.5) * -180
+                        self.pivot.setH(self.pivot.getH() + (target_h - self.pivot.getH()) * 0.1)
+                        self.pivot.setP(self.pivot.getP() + (target_p - self.pivot.getP()) * 0.1)
 
-                    self.last_pinch_dist = curr_dist
+                elif self.mode == "zoom":
+                    if index_up:
+                        gesture_text = "ZOOMING"
+                        gesture_color = (0, 255, 0)
+                        if self.last_pinch_dist > 0:
+                            delta = pinch_dist - self.last_pinch_dist
+                            self.pivot.setY(self.pivot.getY() - delta * 300)
+                            self.pivot.setY(max(5, min(100, self.pivot.getY())))
+                        self.last_pinch_dist = pinch_dist
 
-                    thumb_tip = lms[4]
-                    index_tip = lms[8]
-                    t_x, t_y = int(thumb_tip.x * w), int(thumb_tip.y * h)
-                    i_x, i_y = int(index_tip.x * w), int(index_tip.y * h)
-                    cv2.line(display, (t_x, t_y), (i_x, i_y), (0, 255, 0), 3)
-
-                elif gesture == "move":
-                    gesture_text = "MOVE"
-                    gesture_color = (255, 100, 0)
-
-                    target_x = (data["x"] - 0.5) * 20
-                    target_z = (0.5 - data["y"]) * 15
-
-                    current_x = self.pivot.getX()
-                    current_z = self.pivot.getZ()
-
-                    self.pivot.setX(current_x + (target_x - current_x) * 0.15)
-                    self.pivot.setZ(current_z + (target_z - current_z) * 0.15)
-
-                    self.last_pinch_dist = 0
-
+                elif self.mode == "move":
+                    if index_up and middle_up:
+                        gesture_text = "MOVING"
+                        gesture_color = (255, 100, 0)
+                        palm_center = ((lms[0].x + lms[9].x)/2, (lms[0].y + lms[9].y)/2)
+                        target_x = (palm_center[0] - 0.5) * 40 
+                        target_z = (0.5 - palm_center[1]) * 30
+                        self.pivot.setX(self.pivot.getX() + (target_x - self.pivot.getX()) * 0.3)
+                        self.pivot.setZ(self.pivot.getZ() + (target_z - self.pivot.getZ()) * 0.3)
                 else:
-                    gesture_text = "IDLE"
-                    gesture_color = (200, 200, 200)
                     self.last_pinch_dist = 0
             else:
                 self.last_pinch_dist = 0
 
-            overlay = display.copy()
-            cv2.rectangle(overlay, (10, 10), (450, 140), (0, 0, 0), -1)
-            cv2.addWeighted(overlay, 0.6, display, 0.4, 0, display)
-
-            cv2.putText(display, "STARK INDUSTRIES - HAND CONTROL", (20, 40), 
+            cv2.rectangle(display, (10, 10), (450, 150), (0, 0, 0), -1)
+            cv2.putText(display, "STARK OS - SYSTEM CONTROL", (20, 40), 
                        cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 200, 255), 2)
             cv2.putText(display, "MODE: " + self.mode.upper(), (20, 75), 
                        cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 1)
             cv2.putText(display, "GESTURE: " + gesture_text, (20, 110), 
                        cv2.FONT_HERSHEY_SIMPLEX, 0.7, gesture_color, 2)
 
-            pos_text = "Pos: ({:.1f}, {:.1f}, {:.1f})".format(self.pivot.getX(), self.pivot.getY(), self.pivot.getZ())
-            cv2.putText(display, pos_text, (20, 145), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (150, 150, 150), 1)
-
-            cv2.imshow("Stark HUD - Hand Control", display)
+            cv2.imshow("Stark HUD - System Control", display)
             cv2.waitKey(1)
 
         return task.cont
 
     def destroy(self):
-        self.cap.release()
+        if hasattr(self, 'cap'):
+            self.cap.release()
         cv2.destroyAllWindows()
         super().destroy()
 
